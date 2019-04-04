@@ -26,10 +26,11 @@ public class reader {
 		/*
 		 * Funcion para testear cosas.
 		 * Porfavor meter las cosas nuevas o que no funcionen en esta clase o usar debugger.
+		 *	test();
 		 */
-		test();
 		
-		String option = args.toString();
+		
+		insert("tabla");
 		
 		/*
 		 * 3 Funciones principales con nombres autodescriptivos
@@ -41,7 +42,58 @@ public class reader {
 		*/
 	}
 	
-	//Funciona 
+	public static void insert(String tablename) throws IOException {
+		String filename = "insert_"+tablename;
+		String query = "INSERT into "+tablename+"(";
+		try {
+			Reader reader = Files.newBufferedReader(Paths.get("/home/openbravo/Escritorio/ejemplo.csv"));
+			CSVReader csvreader = new CSVReader(reader);
+			String[] array;
+			String[] campos;
+			String consulta ="";
+			boolean flag=false;
+			while((array = csvreader.readNext()) != null) {
+				for(String s : array) {
+					String[] splited = s.split(";");
+					if(!flag) {
+						campos = splited;
+						flag=true;
+						int counter =0;
+						for(String str : campos) {
+							if(counter!=splited.length-1) {
+								query +=  str+", ";
+								counter++;
+							}
+							else {
+								query+= str+")";
+							}
+						}
+						continue;
+					}
+					else {
+						consulta+= query+" values ";
+						int counter =0;
+						for(String s2: splited) {
+							if(counter!=splited.length-1) {
+								consulta +=  "'"+s2+"', ";
+								counter++;
+							}
+							else consulta+= s2+";\n";
+						}
+						
+					}
+					
+				}
+			}
+			System.out.println(consulta);
+			reader.close();
+			csvreader.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/*Funciona 
 	public static void test() throws IOException {
 		try {
 			Reader reader = Files.newBufferedReader(Paths.get("/home/openbravo/Escritorio/ejemplo.csv"));
@@ -57,5 +109,5 @@ public class reader {
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
-	}
+	}*/
 }
