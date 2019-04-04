@@ -1,18 +1,12 @@
 package csv_to_sql;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-
-import au.com.bytecode.opencsv.CSVParser;
 import au.com.bytecode.opencsv.CSVReader;
 
 public class reader {
@@ -31,8 +25,8 @@ public class reader {
 		 *	test();
 		 */
 		
-		
-		delete("tabla");
+		insert("tabla");
+		update("tabla");
 		
 		/*
 		 * 3 Funciones principales con nombres autodescriptivos
@@ -135,6 +129,69 @@ public class reader {
 			fw.write(consulta);
 			reader.close();
 			csvreader.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public static void update(String tablename) throws IOException{
+		String filename = "update_"+tablename+".sql";
+		String query = "UPDATE "+tablename+" set ";
+		try {
+			Reader reader = Files.newBufferedReader(Paths.get("/home/openbravo/Escritorio/update.csv"));
+			CSVReader csvreader = new CSVReader(reader);
+			String[] array;
+			String[] campos = null;
+			int nowhere=0;
+			String consulta ="";
+			boolean flag=false;
+			while((array = csvreader.readNext()) != null) {
+				for(String s : array) {
+					String[] splited = s.split(";");
+					if(!flag) {
+						flag=true;
+						campos = splited;
+						int counter=0;
+						for(String str: splited) {
+							counter++;
+							//Esto da el numero de campos que NO van para el where
+							if(str.charAt(0) == '*') {
+								nowhere++;
+								String str2= str.substring(1);
+								campos[counter-1]=str2;
+							}
+						}
+						continue;
+					}
+					else {
+						consulta+= query;
+						int counter =0;
+						for(String s2: splited) {
+							if(counter==nowhere) {
+								consulta += campos[counter]+"='"+s2+"' where ";
+								counter++;
+								continue;
+							}
+							else if(counter==splited.length-1) {
+								consulta += campos[counter]+"='"+s2+"';\n";
+								counter++;
+								continue;
+							}
+							consulta +=campos[counter]+"='"+s2+"' ,";
+							counter++;
+						}
+						
+					}
+					
+				}
+			}
+			System.out.println(consulta);
+			File f = new File("/home/openbravo/Escritorio/"+filename);
+			FileWriter fw = new FileWriter(f);
+			fw.write(consulta);
+			reader.close();
+			csvreader.close();
+			fw.close();
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 		}
