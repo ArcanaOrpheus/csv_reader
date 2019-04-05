@@ -13,7 +13,7 @@ import java.util.Scanner;
 
 import au.com.bytecode.opencsv.CSVReader;
 
-public class reader {
+public class reader{
 	
 	public static void main(String[] args) throws Exception {
 		/*
@@ -25,17 +25,59 @@ public class reader {
 		 *	test();
 		 * 3 Funciones principales con nombres autodescriptivos
 		 */
-		String path = args[0].substring(2);
-		String option = args[1];
+		String path = "";
+		boolean pathcheck=false;
+		String option = "";
+		boolean optioncheck=false;
 		String tablename="";
-		if(args[2].isEmpty()) {
+		boolean tablecheck=false;
+		if(args.length==0) {
+			pathcheck = optioncheck = tablecheck = true;
+			System.out.println("There are no arguments for the method, starting manual input");
 			Scanner scanner = new Scanner(System.in);
+			System.out.println("Introduce path to file: ");
+			path= scanner.nextLine();
+			System.out.println("Introduce option: ");
+			option = scanner.nextLine();
 			System.out.print("Introduce table name: ");
-			tablename= scanner.next();
+			tablename = scanner.nextLine();
 			scanner.close();
 		}
 		else {
-			tablename = args[2];
+			for(int i=0; i<args.length;i++) {
+				String argumento = args[i].substring(0, 2);
+				if(argumento.equals("-f")) {
+					path=args[i].substring(3);
+					pathcheck=true;
+				}
+				if(argumento.equals("-t")) {
+					tablename=args[i].substring(3);
+					tablecheck =true;
+				}
+				if( (args[i].equals("-u")) || (args[i].equals("-i")) || (args[i].equals("-d")) ) {
+					optioncheck=true;
+				}
+			}
+			if(!pathcheck) {
+				pathcheck=true;
+				Scanner scanner = new Scanner(System.in);
+				System.out.println("Introduce path to file: ");
+				path= scanner.next();
+				scanner.close();
+			}
+			if(!optioncheck) {
+				optioncheck=true;
+				Scanner scanner = new Scanner(System.in);
+				System.out.println("Introduce option: ");
+				option = scanner.next();
+				scanner.close();
+			}
+			if(!tablecheck) {
+				Scanner scanner = new Scanner(System.in);
+				System.out.print("Introduce table name: ");
+				tablename = scanner.next();
+				scanner.close();
+			}
 		}
 		if(option.equals("-i")) insert(tablename, path);
 		if(option.equals("-u")) update(tablename, path);
@@ -85,7 +127,7 @@ public class reader {
 					
 				}
 			}
-			File f = new File("/home/openbravo/Escritorio/"+filename);
+			File f = new File("./"+filename);
 			FileWriter fw = new FileWriter(f);
 			fw.write(consulta);
 			fw.close();
@@ -129,7 +171,7 @@ public class reader {
 					
 				}
 			}
-			File f = new File("/home/openbravo/Escritorio/"+filename);
+			File f = new File("./"+filename);
 			FileWriter fw = new FileWriter(f);
 			fw.write(consulta);
 			fw.close();
@@ -213,7 +255,7 @@ public class reader {
 					}
 				}
 			}
-			File f = new File("/home/openbravo/Escritorio/"+filename);
+			File f = new File("./"+filename);
 			FileWriter fw = new FileWriter(f);
 			fw.write(output);
 			reader.close();
@@ -223,6 +265,7 @@ public class reader {
 			e.printStackTrace();
 		}
 	}
+
 	
 	
 	/*Funciona 
