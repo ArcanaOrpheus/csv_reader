@@ -7,42 +7,46 @@ import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
+
 import au.com.bytecode.opencsv.CSVReader;
 
 public class reader {
 	
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws Exception {
 		/*
 		 * Clase que convierte csv separados por ";" en scripts sql para automatizar el trabajo con los clientes
 		 * La clase recive por comando la opcion y el nombre de la tabla.
 		 * El nombre del script sera siempre (opcion)_(nombre tabla).sql
-		 * 
-		 */
-		
-		/*
 		 * Funcion para testear cosas.
 		 * Porfavor meter las cosas nuevas o que no funcionen en esta clase o usar debugger.
 		 *	test();
-		 */
-		
-		insert("tabla");
-		update("tabla");
-		
-		/*
 		 * 3 Funciones principales con nombres autodescriptivos
 		 */
-		/*
-		if(option.equals("-i")) insert();
-		if(option.equals("-u")) update();
-		if(option.equals("-d")) delete();
-		*/
+		String path = args[0].substring(2);
+		String option = args[1];
+		String tablename="";
+		if(args[2].isEmpty()) {
+			Scanner scanner = new Scanner(System.in);
+			System.out.print("Introduce table name: ");
+			tablename= scanner.next();
+			scanner.close();
+		}
+		else {
+			tablename = args[2];
+		}
+		if(option.equals("-i")) insert(tablename, path);
+		if(option.equals("-u")) update(tablename, path);
+		if(option.equals("-d")) delete(tablename, path);
 	}
 	
-	public static void insert(String tablename) throws IOException {
+	public static void insert(String tablename, String path) throws IOException {
 		String filename = "insert_"+tablename+".sql";
 		String query = "INSERT into "+tablename+" (";
 		try {
-			Reader reader = Files.newBufferedReader(Paths.get("/home/openbravo/Escritorio/ejemplo.csv"));
+			Reader reader = Files.newBufferedReader(Paths.get(path));
 			CSVReader csvreader = new CSVReader(reader);
 			String[] array;
 			String[] campos;
@@ -84,6 +88,7 @@ public class reader {
 			File f = new File("/home/openbravo/Escritorio/"+filename);
 			FileWriter fw = new FileWriter(f);
 			fw.write(consulta);
+			fw.close();
 			reader.close();
 			csvreader.close();
 		} catch (FileNotFoundException e) {
@@ -91,11 +96,11 @@ public class reader {
 		}
 	}
 	
-	public static void delete(String tablename) throws IOException {
+	public static void delete(String tablename, String path) throws IOException {
 		String filename = "delete_"+tablename+".sql";
 		String query = "Delete from "+tablename+" where ";
 		try {
-			Reader reader = Files.newBufferedReader(Paths.get("/home/openbravo/Escritorio/ejemplo.csv"));
+			Reader reader = Files.newBufferedReader(Paths.get(path));
 			CSVReader csvreader = new CSVReader(reader);
 			String[] array;
 			String[] campos = null;
@@ -127,6 +132,7 @@ public class reader {
 			File f = new File("/home/openbravo/Escritorio/"+filename);
 			FileWriter fw = new FileWriter(f);
 			fw.write(consulta);
+			fw.close();
 			reader.close();
 			csvreader.close();
 		} catch (FileNotFoundException e) {
@@ -134,61 +140,82 @@ public class reader {
 		}
 	}
 	
-	public static void update(String tablename) throws IOException{
+	public static void update(String tablename, String path) throws Exception{
 		String filename = "update_"+tablename+".sql";
-		String query = "UPDATE "+tablename+" set ";
 		try {
-			Reader reader = Files.newBufferedReader(Paths.get("/home/openbravo/Escritorio/update.csv"));
+			Reader reader = Files.newBufferedReader(Paths.get(path));
 			CSVReader csvreader = new CSVReader(reader);
 			String[] array;
 			String[] campos = null;
-			int nowhere=0;
-			String consulta ="";
+			List <Integer> where  = new ArrayList<Integer>();
 			boolean flag=false;
+			String output ="";
+			int contadorquery = 0;
 			while((array = csvreader.readNext()) != null) {
+				String query = "UPDATE "+tablename+" set ";
+				String querywhere = " where ";
 				for(String s : array) {
 					String[] splited = s.split(";");
 					if(!flag) {
-						flag=true;
-						campos = splited;
-						int counter=0;
-						for(String str: splited) {
-							counter++;
-							//Esto da el numero de campos que NO van para el where
-							if(str.charAt(0) == '*') {
-								nowhere++;
-								String str2= str.substring(1);
-								campos[counter-1]=str2;
+						try {
+							flag=true;
+							campos = splited;
+							contadorquery = splited.length;
+							int counter = 0;
+							for(String str : splited) {
+								if(str.charAt(0)=='*') {
+									contadorquery--;
+									campos[counter]= str.substring(1);
+									where.add(counter);
+								}
+								counter++;
 							}
+							if(contadorquery==0) {
+								throw new Exception("Invalid query, there's no fields to set");
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
 						}
-						continue;
 					}
 					else {
-						consulta+= query;
-						int counter =0;
-						for(String s2: splited) {
-							if(counter==nowhere) {
-								consulta += campos[counter]+"='"+s2+"' where ";
-								counter++;
-								continue;
+						int querycounter = 0;
+						querycounter = contadorquery-1;
+						int counter= 0;
+						for(String str: splited) {
+							if(counter==splited.length-1) {
+								if(where.contains(counter)) {
+									querywhere += campos[counter]+" = '"+str+"';\n ";
+									counter++;
+								}
+								else {
+									query += campos[counter]+" = '"+str+"';\n ";
+									counter++;
+								}
 							}
-							else if(counter==splited.length-1) {
-								consulta += campos[counter]+"='"+s2+"';\n";
-								counter++;
-								continue;
+							else {
+									if(where.contains(counter)) {
+										querywhere += campos[counter]+" = '"+str+"', ";
+										counter++;
+									}
+									else {
+										if(querycounter==0) {
+											query += campos[counter]+" = '"+str+"'";
+											counter++;
+										}else {
+											query += campos[counter]+" = '"+str+"', ";
+											counter++;
+											querycounter--;
+										}
+									}
 							}
-							consulta +=campos[counter]+"='"+s2+"' ,";
-							counter++;
 						}
-						
+						output+= query + querywhere;
 					}
-					
 				}
 			}
-			System.out.println(consulta);
 			File f = new File("/home/openbravo/Escritorio/"+filename);
 			FileWriter fw = new FileWriter(f);
-			fw.write(consulta);
+			fw.write(output);
 			reader.close();
 			csvreader.close();
 			fw.close();
@@ -200,13 +227,13 @@ public class reader {
 	
 	/*Funciona 
 	public static void test() throws IOException {
+		//Estructura basica para leer el arxivo csv
 		try {
-			Reader reader = Files.newBufferedReader(Paths.get("/home/openbravo/Escritorio/ejemplo.csv"));
+			Reader reader = Files.newBufferedReader(Paths.get(path_string));
 			CSVReader csvreader = new CSVReader(reader);
 			String[] array;
 			while((array = csvreader.readNext()) != null) {
 				for(String s : array) {
-					System.out.println(s);
 				}
 			}
 			reader.close();
