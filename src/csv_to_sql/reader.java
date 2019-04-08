@@ -20,6 +20,7 @@ public class reader{
 	
 	public static void main(String[] args) throws Exception {
 		/*
+		 * Creador: Daniel Suñe Cea
 		 * Clase que convierte csv separados por ";" en scripts sql para automatizar el trabajo con los clientes
 		 * La clase recive por comando la opcion y el nombre de la tabla.
 		 * El nombre del script sera siempre (opcion)_(nombre tabla).sql
@@ -363,7 +364,7 @@ public class reader{
 						/*
 						 * En caso de no existir el where no se metera la string querywhere ya que no es necesario.
 						 */
-						if(contadorquery == splited.length-1) output+= query;
+						if(contadorquery == splited.length) output+= query;
 						else output+= query + querywhere;
 					}
 				}
