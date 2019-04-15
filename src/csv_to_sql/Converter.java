@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.Scanner;
 import au.com.bytecode.opencsv.CSVReader;
 
-public class reader{
+public class Converter{
 	
 
 	static public Scanner scanner = new Scanner(System.in);
@@ -53,11 +53,9 @@ public class reader{
 			 */
 			System.out.println("There are no arguments for the method, starting manual input");
 			System.out.println("Introduce path to file: ");
-			path= scanner.nextLine().toLowerCase();
-			System.out.println(path.substring(path.length()-3));
+			path= scanner.nextLine();
 			System.out.println("Introduce option (insert/ update /delete ): ");
-			option = scanner.nextLine().toLowerCase();
-			System.out.println(option);
+			option = scanner.nextLine();
 			System.out.println("Introduce table name: ");
 			tablename = scanner.nextLine();
 		}
@@ -66,31 +64,27 @@ public class reader{
 			 * En caso de que al menos exista un parametro se entra en este else donde se recurre a los booleanos y varios if para comprovar que argumentos faltan
 			 */
 			for(int i=0; i<args.length;i++) {
-				args[i] = args[i].toLowerCase();
 				String argumento = args[i].substring(0, 2);
-				argumento= argumento.toLowerCase();
-				if(argumento.equals("-f")) {
-					if(argumento.substring(argumento.length()-3).equals("csv")) {
+				if(argumento.equalsIgnoreCase("-f")) {
+					if(args[i].substring(args[i].length()-3).equalsIgnoreCase("csv")) {
 						path=args[i].substring(3);
 						pathcheck=true;
 					}
 					else path=getPath();
 				}
-				if(argumento.equals("-t")) {
+				if(argumento.equalsIgnoreCase("-t")) {
 					tablename=args[i].substring(3);
 					tablecheck =true;
 				}
 				/*
 				 * La opcion de update,delete o insert se ha modificiado de forma de que se pueda escribir via guion o via string (el nombre de la funcion en si)
 				 */
-				if( (args[i].equals("-u")) || (args[i].equals("-i")) || (args[i].equals("-d")) ) {
+				if( (args[i].equalsIgnoreCase("-u")) || (args[i].equalsIgnoreCase("-i")) || (args[i].equalsIgnoreCase("-d")) ) {
+					option=args[i];
 					optioncheck=true;
 				}
-				if( (args[i].equals("update")) || (args[i].equals("insert")) || (args[i].equals("delete")) ) {
-					optioncheck=true;
-				}
-				else {
-					args[i]= getOption();
+				if( (args[i].equalsIgnoreCase("update")) || (args[i].equalsIgnoreCase("insert")) || (args[i].equalsIgnoreCase("delete")) ) {
+					option=args[i];
 					optioncheck=true;
 				}
 			}
@@ -98,7 +92,7 @@ public class reader{
 			/*
 			 * Se compruevan los booleanos y se preguntan todos los parametros que faltan.
 			 */
-			if(!pathcheck || path.substring(path.length()-3).equals("csv") == false) {
+			if(!pathcheck || path.substring(path.length()-3).equalsIgnoreCase("csv") == false) {
 				pathcheck=true;
 				path= getPath();
 			}
@@ -113,9 +107,9 @@ public class reader{
 		/*
 		 * Estos if simplemente llaman a la opcion que requiere el usuario
 		 */
-		if(option.equals("-i") || option.equals("insert")) insert(tablename, path);
-		if(option.equals("-u") || option.equals("update")) update(tablename, path);
-		if(option.equals("-d") || option.equals("delete")) delete(tablename, path);
+		if(option.equalsIgnoreCase("-i") || option.equalsIgnoreCase("insert")) insert(tablename, path);
+		if(option.equalsIgnoreCase("-u") || option.equalsIgnoreCase("update")) update(tablename, path);
+		if(option.equalsIgnoreCase("-d") || option.equalsIgnoreCase("delete")) delete(tablename, path);
 		scanner.close();
 	}
 	
@@ -410,33 +404,39 @@ public class reader{
 	}
 
 	public static String getOption() {
-		Scanner sc = new Scanner (System.in);
+		boolean flag= false;
 		String option ="";
-		System.out.println("Introduce option (insert/ update /delete ): ");
-		option = sc.nextLine().toLowerCase();
+		Scanner sc = new Scanner (System.in);
+		while(!flag) {
+			System.out.println("Introduce option (insert/ update /delete ): ");
+			option = sc.nextLine();
+			if( (option.equalsIgnoreCase("-u")) || (option.equalsIgnoreCase("-i")) || (option.equalsIgnoreCase("-d")) ) {
+				flag=true;
+			}
+			if( (option.equalsIgnoreCase("update")) || (option.equalsIgnoreCase("insert")) || (option.equalsIgnoreCase("delete")) ) {
+				flag=true;
+			}
+			else {
+				System.out.println("Invalid option...");
+			}
+		}
 		sc.close();
-		if( (option.equals("-u")) || (option.equals("-i")) || (option.equals("-d")) ) {
-			return option;
-		}
-		if( (option.equals("update")) || (option.equals("insert")) || (option.equals("delete")) ) {
-			return option;
-		}
-		else {
-			System.out.println("Invalid option...");
-			return getOption();
-		}
+		return option;
 	}
 	
 	public static String getPath() {
-		Scanner sc = new Scanner (System.in);
+		boolean flag=false;
 		String path="";		
-		System.out.println("Introduce a valid path to file: ");
-		path = sc.nextLine().toLowerCase();
-		sc.close();
-		if(path.substring(path.length()-3).equals("csv")) {
-			return path;
+		Scanner sc = new Scanner (System.in);
+		while(!flag) {
+			System.out.println("Introduce a path to a .csv file: ");
+			path = sc.nextLine();
+			if(path.substring(path.length()-3).equalsIgnoreCase("csv")) {
+				flag=true;
+			}
 		}
-		else return getPath();
+		sc.close();
+		return path;
 	}
 	
 	/*Funciona 
