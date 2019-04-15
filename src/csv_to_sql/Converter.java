@@ -6,7 +6,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,10 +52,8 @@ public class Converter{
 			 * Si no se ha pasado ningun parametro se activa este if.  Todos los booleanos se quedan false ya que no es necesario mas comprovaciones
 			 */
 			System.out.println("There are no arguments for the method, starting manual input");
-			System.out.println("Introduce path to file: ");
-			path= scanner.nextLine();
-			System.out.println("Introduce option (insert/ update /delete ): ");
-			option = scanner.nextLine();
+			path = getPath();
+			option= getOption();
 			System.out.println("Introduce table name: ");
 			tablename = scanner.nextLine();
 		}
@@ -71,7 +68,10 @@ public class Converter{
 						path=args[i].substring(3);
 						pathcheck=true;
 					}
-					else path=getPath();
+					else {
+						path=getPath();
+						pathcheck=true;
+					}
 				}
 				if(argumento.equalsIgnoreCase("-t")) {
 					tablename=args[i].substring(3);
@@ -306,7 +306,7 @@ public class Converter{
 							 */
 							if(contadorquery==splited.length) {
 								String input="";
-								System.out.print("WARNING: THERE'S NO WHERE!!!\nARE U SURE THAT U WANT TO CONTINUE? (Y/N)");
+								System.out.print("WARNING: THERE'S NO WHERE!!!\nDO YOU WANT TO CONTINUE? (Y/N)");
 								input = scanner.nextLine();
 								if(input.equals("N")) break;
 							}
@@ -406,10 +406,9 @@ public class Converter{
 	public static String getOption() {
 		boolean flag= false;
 		String option ="";
-		Scanner sc = new Scanner (System.in);
 		while(!flag) {
 			System.out.println("Introduce option (insert/ update /delete ): ");
-			option = sc.nextLine();
+			option = scanner.nextLine();
 			if( (option.equalsIgnoreCase("-u")) || (option.equalsIgnoreCase("-i")) || (option.equalsIgnoreCase("-d")) ) {
 				flag=true;
 			}
@@ -420,22 +419,20 @@ public class Converter{
 				System.out.println("Invalid option...");
 			}
 		}
-		sc.close();
 		return option;
 	}
 	
 	public static String getPath() {
 		boolean flag=false;
 		String path="";		
-		Scanner sc = new Scanner (System.in);
 		while(!flag) {
 			System.out.println("Introduce a path to a .csv file: ");
-			path = sc.nextLine();
+			path = scanner.nextLine();
 			if(path.substring(path.length()-3).equalsIgnoreCase("csv")) {
 				flag=true;
 			}
+			else System.out.println("Invalid extension or pathfile");
 		}
-		sc.close();
 		return path;
 	}
 	
