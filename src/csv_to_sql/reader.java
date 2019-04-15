@@ -10,7 +10,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-
 import au.com.bytecode.opencsv.CSVReader;
 
 public class reader{
@@ -48,15 +47,18 @@ public class reader{
 		boolean tablecheck=false;
 		//Inicio de las comprovaciones
 		if(args.length==0) {
+			pathcheck=optioncheck=tablecheck=true;
 			/*
 			 * Si no se ha pasado ningun parametro se activa este if.  Todos los booleanos se quedan false ya que no es necesario mas comprovaciones
 			 */
 			System.out.println("There are no arguments for the method, starting manual input");
 			System.out.println("Introduce path to file: ");
-			path= scanner.nextLine();
-			System.out.println("Introduce option: ");
-			option = scanner.nextLine();
-			System.out.print("Introduce table name: ");
+			path= scanner.nextLine().toLowerCase();
+			System.out.println(path.substring(path.length()-3));
+			System.out.println("Introduce option (insert/ update /delete ): ");
+			option = scanner.nextLine().toLowerCase();
+			System.out.println(option);
+			System.out.println("Introduce table name: ");
 			tablename = scanner.nextLine();
 		}
 		else {
@@ -64,10 +66,15 @@ public class reader{
 			 * En caso de que al menos exista un parametro se entra en este else donde se recurre a los booleanos y varios if para comprovar que argumentos faltan
 			 */
 			for(int i=0; i<args.length;i++) {
+				args[i] = args[i].toLowerCase();
 				String argumento = args[i].substring(0, 2);
+				argumento= argumento.toLowerCase();
 				if(argumento.equals("-f")) {
-					path=args[i].substring(3);
-					pathcheck=true;
+					if(argumento.substring(argumento.length()-3).equals("csv")) {
+						path=args[i].substring(3);
+						pathcheck=true;
+					}
+					else path=getPath();
 				}
 				if(argumento.equals("-t")) {
 					tablename=args[i].substring(3);
@@ -82,25 +89,27 @@ public class reader{
 				if( (args[i].equals("update")) || (args[i].equals("insert")) || (args[i].equals("delete")) ) {
 					optioncheck=true;
 				}
+				else {
+					args[i]= getOption();
+					optioncheck=true;
+				}
 			}
+		}
 			/*
 			 * Se compruevan los booleanos y se preguntan todos los parametros que faltan.
 			 */
-			if(!pathcheck) {
+			if(!pathcheck || path.substring(path.length()-3).equals("csv") == false) {
 				pathcheck=true;
-				System.out.println("Introduce path to file: ");
-				path= scanner.next();
+				path= getPath();
 			}
 			if(!optioncheck) {
 				optioncheck=true;
-				System.out.println("Introduce option: ");
-				option = scanner.next();
+				option = getOption();
 			}
 			if(!tablecheck) {
 				System.out.print("Introduce table name: ");
 				tablename = scanner.next();
 			}
-		}
 		/*
 		 * Estos if simplemente llaman a la opcion que requiere el usuario
 		 */
@@ -183,9 +192,10 @@ public class reader{
 			 * Se crea el nuevo archivo con nombre en base a la opcion y el nombre de la tabla.
 			 * Luego de escribe la consulta en el archivo  y se cierran todos los readers y writers
 			 */
-			File f = new File("./"+filename);
+			File f = new File(filename);
 			FileWriter fw = new FileWriter(f);
 			fw.write(consulta);
+			System.out.println("File "+filename+" created successfully");
 			fw.close();
 			reader.close();
 			csvreader.close();
@@ -227,9 +237,10 @@ public class reader{
 					
 				}
 			}
-			File f = new File("./"+filename);
+			File f = new File(filename);
 			FileWriter fw = new FileWriter(f);
 			fw.write(consulta);
+			System.out.println("File "+filename+" created successfully");
 			fw.close();
 			reader.close();
 			csvreader.close();
@@ -321,20 +332,23 @@ public class reader{
 						int querycounter = 0;
 						querycounter = contadorquery-1;
 						int counter= 0;
+						int wherecounter=0;
 						for(String str: splited) {
 							/*
 							 * Este if marca el final de la linea
 							 */
-							if(counter==splited.length-1) {
+							if(counter==splited.length) {
 								if(where.contains(counter)) {
 									querywhere += campos[counter]+" = '"+str+"';\n ";
+									querycounter--;
 									counter++;
 								}
 								/*
 								 * En caso de no existir el where no entraria en el if de arriba. No es que vaya a pasar. Pero por si alguien quiere joderla.
 								 */
 								else {
-									query += campos[counter]+" = '"+str+"';\n ";
+									query += campos[counter]+" = '"+str+"' ";
+									querycounter--;
 									counter++;
 								}
 							}
@@ -343,8 +357,16 @@ public class reader{
 								 * En este if se comprueva los valores que han de ir al where.
 								 */
 									if(where.contains(counter)) {
+										wherecounter++;
+										if(wherecounter==where.size()) {
+											querywhere += campos[counter]+" = '"+str+"';\n";
+											counter++;
+										}
+										else {
 										querywhere += campos[counter]+" = '"+str+"', ";
+										querycounter--;
 										counter++;
+										}
 									}
 									else {
 										/*
@@ -373,9 +395,12 @@ public class reader{
 			 * Se crea el nuevo archivo con nombre en base a la opcion y el nombre de la tabla.
 			 * Luego de escribe la consulta en el archivo  y se cierran todos los readers y writers
 			 */
-			File f = new File("./"+filename);
+			reader.close();
+			csvreader.close();
+			File f = new File(filename);
 			FileWriter fw = new FileWriter(f);
 			fw.write(output);
+			System.out.println("File "+filename+" created successfully");
 			reader.close();
 			csvreader.close();
 			fw.close();
@@ -384,7 +409,35 @@ public class reader{
 		}
 	}
 
+	public static String getOption() {
+		Scanner sc = new Scanner (System.in);
+		String option ="";
+		System.out.println("Introduce option (insert/ update /delete ): ");
+		option = sc.nextLine().toLowerCase();
+		sc.close();
+		if( (option.equals("-u")) || (option.equals("-i")) || (option.equals("-d")) ) {
+			return option;
+		}
+		if( (option.equals("update")) || (option.equals("insert")) || (option.equals("delete")) ) {
+			return option;
+		}
+		else {
+			System.out.println("Invalid option...");
+			return getOption();
+		}
+	}
 	
+	public static String getPath() {
+		Scanner sc = new Scanner (System.in);
+		String path="";		
+		System.out.println("Introduce a valid path to file: ");
+		path = sc.nextLine().toLowerCase();
+		sc.close();
+		if(path.substring(path.length()-3).equals("csv")) {
+			return path;
+		}
+		else return getPath();
+	}
 	
 	/*Funciona 
 	public static void test() throws IOException {
