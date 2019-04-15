@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Reader;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
@@ -189,7 +190,7 @@ public class Converter{
 			File f = new File(filename);
 			FileWriter fw = new FileWriter(f);
 			fw.write(consulta);
-			System.out.println("File "+filename+" created successfully");
+			System.out.println("File "+f.getAbsolutePath()+" created successfully");
 			fw.close();
 			reader.close();
 			csvreader.close();
@@ -234,7 +235,7 @@ public class Converter{
 			File f = new File(filename);
 			FileWriter fw = new FileWriter(f);
 			fw.write(consulta);
-			System.out.println("File "+filename+" created successfully");
+			System.out.println("File "+f.getAbsolutePath()+" created successfully");
 			fw.close();
 			reader.close();
 			csvreader.close();
@@ -357,8 +358,7 @@ public class Converter{
 											counter++;
 										}
 										else {
-										querywhere += campos[counter]+" = '"+str+"', ";
-										querycounter--;
+										querywhere += campos[counter]+" = '"+str+"' and ";
 										counter++;
 										}
 									}
@@ -380,7 +380,7 @@ public class Converter{
 						/*
 						 * En caso de no existir el where no se metera la string querywhere ya que no es necesario.
 						 */
-						if(contadorquery == splited.length) output+= query;
+						if(contadorquery == splited.length) output+= query+";\n";
 						else output+= query + querywhere;
 					}
 				}
@@ -394,7 +394,7 @@ public class Converter{
 			File f = new File(filename);
 			FileWriter fw = new FileWriter(f);
 			fw.write(output);
-			System.out.println("File "+filename+" created successfully");
+			System.out.println("File "+f.getAbsolutePath()+" created successfully");
 			reader.close();
 			csvreader.close();
 			fw.close();
