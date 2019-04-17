@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
+
 import au.com.bytecode.opencsv.CSVReader;
 
 public class Converter{
@@ -132,7 +133,7 @@ public class Converter{
 			 * Boolean flag: Un booleano para ver si hemos pasado por la primera linea o no.
 			 */
 			Reader reader = Files.newBufferedReader(Paths.get(path));
-			CSVReader csvreader = new CSVReader(reader);
+			CSVReader csvreader = new CSVReader(reader, ';', '"',' ');
 			String[] array;
 			String[] campos;
 			String consulta ="";
@@ -141,18 +142,16 @@ public class Converter{
 			 * En el bucle leeremos cada linea, se asignaran los valores a sus campos correspondientes y se guardara la consulta.
 			 */
 			while((array = csvreader.readNext()) != null) {
-				for(String s : array) {
-					String[] splited = s.split(";");
 					if(!flag) {
 						/*
 						 * En la primera iteracion encontraremos los campos que queremos insertar y los guardaremos en la query.
 						 * La query no se modificara ya que todos los campos seran identicos para cada iteracion
 						 */
-						campos = splited;
+						campos = array;
 						flag=true;
 						int counter =0;
 						for(String str : campos) {
-							if(counter!=splited.length-1) {
+							if(counter!=array.length-1) {
 								query +=  str+", ";
 								counter++;
 							}
@@ -160,28 +159,23 @@ public class Converter{
 								query+= str+")";
 							}
 						}
-						continue;
 					}
 					else {
-						/*
-						 * A partir de la segunda iteracion la flag se vuelve true y todos los valores se usaran para los values.
-						 */
-						consulta+= query+" values (";
 						int counter =0;
-						for(String s2: splited) {
+						consulta+= query+" values (";
+						for(counter=0;counter<=array.length-1;counter++) {
 							/*
-							 * Se usa un if para diferenciar si es el ultimo campo o no de forma que se cierre la consulta.
+							 * A partir de la segunda iteracion la flag se vuelve true y todos los valores se usaran para los values.
 							 */
-							if(counter!=splited.length-1) {
-								consulta +=  "'"+s2+"', ";
-								counter++;
-							}
-							else consulta+= "'"+s2+"');\n";
+								/*
+								 * Se usa un if para diferenciar si es el ultimo campo o no de forma que se cierre la consulta.
+								 */
+								if(counter!=array.length-1) {
+									consulta +=  "'"+array[counter]+"', ";
+								}
+								else consulta+= "'"+array[counter]+"');\n";
 						}
-						
 					}
-					
-				}
 			}
 			/*
 			 * Se crea el nuevo archivo con nombre en base a la opcion y el nombre de la tabla.
@@ -203,35 +197,54 @@ public class Converter{
 		String filename = "delete_"+tablename+".sql";
 		String query = "Delete from "+tablename+" where ";
 		try {
+			/*
+			 * Parametros:
+			 * Reader: simple reader requerido por CSVReader, recibe el path al csv
+			 * csvreader: autodescriptivo. Es el objeto que leera el propio csv
+			 * String[] array: Parametro donde guardaremos los diferentes parametros que nos pasan en el csv
+			 * String[] campos: Parametro donde guardaremos la primera linea del csv que contiene los campos de la base de datos que queremos modificar
+			 * String consulta: String donde guardaremos toda la consulta y sera lo que devolvamos al usuario en el fichero
+			 * Boolean flag: Un booleano para ver si hemos pasado por la primera linea o no.
+			 */
 			Reader reader = Files.newBufferedReader(Paths.get(path));
-			CSVReader csvreader = new CSVReader(reader);
+			CSVReader csvreader = new CSVReader(reader, ';', '"',' ');
 			String[] array;
 			String[] campos = null;
 			String consulta ="";
 			boolean flag=false;
+			/*
+			 * En el bucle leeremos cada linea, se asignaran los valores a sus campos correspondientes y se guardara la consulta.
+			 */
 			while((array = csvreader.readNext()) != null) {
-				for(String s : array) {
-					String[] splited = s.split(";");
 					if(!flag) {
-						campos = splited;
-						flag=true;
-						continue;
-					}
-					else {
-						consulta+= query;
-						int counter =0;
-						for(String s2: splited) {
-							if(counter!=splited.length-1) {
-								consulta +=  campos[counter]+" = '"+s2+"', ";
-								counter++;
-							}
-							else consulta+= campos[counter]+" = '"+s2+"';\n";
+							/*
+							 * En la primera iteracion encontraremos los campos que queremos insertar y los guardaremos en la query.
+							 * La query no se modificara ya que todos los campos seran identicos para cada iteracion
+							 */
+							campos = array;
+							flag=true;
 						}
-						
+					else {
+						int counter =0;
+						consulta+= query;
+						for(counter=0;counter<=array.length-1;counter++) {
+							/*
+							 * A partir de la segunda iteracion la flag se vuelve true y todos los valores se usaran para los values.
+							 */
+								/*
+								 * Se usa un if para diferenciar si es el ultimo campo o no de forma que se cierre la consulta.
+								 */
+								if(counter!=array.length-1) {
+									consulta +=campos[counter]+"='"+array[counter]+"' and ";
+								}
+								else consulta+=campos[counter]+"='"+array[counter]+"';\n";
+						}
 					}
-					
-				}
 			}
+			/*
+			 * Se crea el nuevo archivo con nombre en base a la opcion y el nombre de la tabla.
+			 * Luego de escribe la consulta en el archivo  y se cierran todos los readers y writers
+			 */
 			File f = new File(filename);
 			FileWriter fw = new FileWriter(f);
 			fw.write(consulta);
@@ -266,7 +279,7 @@ public class Converter{
 			 * 
 			 */
 			Reader reader = Files.newBufferedReader(Paths.get(path));
-			CSVReader csvreader = new CSVReader(reader);
+			CSVReader csvreader = new CSVReader(reader, ';', '"',' ');
 			String[] array;
 			String[] campos = null;
 			List <Integer> where  = new ArrayList<Integer>();
@@ -279,8 +292,6 @@ public class Converter{
 				 */
 				String query = "UPDATE "+tablename+" set ";
 				String querywhere = " where ";
-				for(String s : array) {
-					String[] splited = s.split(";");
 					if(!flag) {
 						try {
 							/*
@@ -288,10 +299,10 @@ public class Converter{
 							 * Se marcaran las posiciones de los campos que corresponden al where
 							 */
 							flag=true;
-							campos = splited;
-							contadorquery = splited.length;
+							campos = array;
+							contadorquery = array.length;
 							int counter = 0;
-							for(String str : splited) {
+							for(String str : array) {
 								if(str.charAt(0)=='*') {
 									contadorquery--;
 									campos[counter]= str.substring(1);
@@ -304,7 +315,7 @@ public class Converter{
 							 * En caso de que no existan valores para el set devuelve error.
 							 * En de que no exista where se lanza un aviso al usuario. 
 							 */
-							if(contadorquery==splited.length) {
+							if(contadorquery==array.length+1) {
 								String input="";
 								System.out.print("WARNING: THERE'S NO WHERE!!!\nDO YOU WANT TO CONTINUE? (Y/N)");
 								input = scanner.nextLine();
@@ -328,11 +339,11 @@ public class Converter{
 						querycounter = contadorquery-1;
 						int counter= 0;
 						int wherecounter=0;
-						for(String str: splited) {
+						for(String str: array) {
 							/*
 							 * Este if marca el final de la linea
 							 */
-							if(counter==splited.length) {
+							if(counter==array.length) {
 								if(where.contains(counter)) {
 									querywhere += campos[counter]+" = '"+str+"';\n ";
 									querycounter--;
@@ -380,10 +391,10 @@ public class Converter{
 						/*
 						 * En caso de no existir el where no se metera la string querywhere ya que no es necesario.
 						 */
-						if(contadorquery == splited.length) output+= query+";\n";
+						if(contadorquery == array.length) output+= query+";\n";
 						else output+= query + querywhere;
 					}
-				}
+				
 			}
 			/*
 			 * Se crea el nuevo archivo con nombre en base a la opcion y el nombre de la tabla.
