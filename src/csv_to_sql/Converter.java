@@ -133,7 +133,7 @@ public class Converter{
 			 * Boolean flag: Un booleano para ver si hemos pasado por la primera linea o no.
 			 */
 			Reader reader = Files.newBufferedReader(Paths.get(path));
-			CSVReader csvreader = new CSVReader(reader, ';', '"',' ');
+			CSVReader csvreader = new CSVReader(reader, ';', '"');
 			String[] array;
 			String[] campos;
 			String consulta ="";
@@ -207,7 +207,7 @@ public class Converter{
 			 * Boolean flag: Un booleano para ver si hemos pasado por la primera linea o no.
 			 */
 			Reader reader = Files.newBufferedReader(Paths.get(path));
-			CSVReader csvreader = new CSVReader(reader, ';', '"',' ');
+			CSVReader csvreader = new CSVReader(reader, ';', '"');
 			String[] array;
 			String[] campos = null;
 			String consulta ="";
@@ -279,7 +279,7 @@ public class Converter{
 			 * 
 			 */
 			Reader reader = Files.newBufferedReader(Paths.get(path));
-			CSVReader csvreader = new CSVReader(reader, ';', '"',' ');
+			CSVReader csvreader = new CSVReader(reader, ';', '"');
 			String[] array;
 			String[] campos = null;
 			List <Integer> where  = new ArrayList<Integer>();
